@@ -72,6 +72,12 @@ class retrieve_entry(object):
         # Iterate through results
         self.results = _none_or_array(blob, 'results', headword_entry)
 
+    def get_definitions(self):
+        defs = []
+        for result in self.results:
+            defs.extend(result.get_definitions())
+        return defs
+
 
 class headword_entry(object):
     def __init__(self, id=None, language=None, lexical_entries=None, word=None,
@@ -96,13 +102,19 @@ class headword_entry(object):
         self.id = blob['id']
         self.word = blob['word']
         self.language = blob['language']
-        self.lexicalEntries = _none_or_array(blob, 'lexicalEntries',
+        self.lexical_entries = _none_or_array(blob, 'lexicalEntries',
                                              lexical_entry)
         # Now optional
         self.pronunciations = _none_or_array(blob, 'pronunciations',
                                              pronunciation)
         self.type = blob.get('type', None)
         # Probably should do some type checking
+
+    def get_definitions(self):
+        defs = []
+        for lexical_entry in self.lexical_entries:
+            defs.extend(lexical_entry.get_definitions())
+        return defs
 
 
 class lexical_entry(object):
@@ -123,7 +135,7 @@ class lexical_entry(object):
         self.notes = notes
         # Array of Pronunciation
         self.pronunciations = pronunciations
-        # realization of an entry (definition)
+        # realization of an entry
         self.text = text
         # Array of Variant_form which are interchangable depending on context
         self.variant_forms = variant_forms
@@ -144,6 +156,12 @@ class lexical_entry(object):
                                              pronunciation)
         self.variant_forms = _none_or_array(blob, 'variantForms', variant_form)
         # Probably should do some type checking
+
+    def get_definitions(self):
+        defs = []
+        for entry in self.entries:
+            defs.extend(entry.get_definitions())
+        return defs
 
 
 class entry(object):
@@ -175,8 +193,15 @@ class entry(object):
         self.notes = _none_or_array(blob, 'notes', categorized_text)
         self.pronunciations = _none_or_array(blob, 'pronunciations',
                                              pronunciation)
+        self.senses = _none_or_array(blob, 'senses', sense)
         self.variant_forms = _none_or_array(blob, 'variantForms', variant_form)
         # Probably should do some type checking
+
+    def get_definitions(self):
+        defs = []
+        for sense in self.senses:
+            defs.extend(sense.get_definitions())
+        return defs
 
 
 # A variation of the word in spelling or maybe pronunciation
@@ -303,6 +328,15 @@ class sense(object):
         self.subsenses = _none_or_array(blob, 'subsenses', sense)
         self.translations = _none_or_array(blob, 'translations', translation)
         self.variant_forms = _none_or_array(blob, 'variantForms', variant_form)
+
+    def get_definitions(self):
+        defs = []
+        for definition in self.definitions:
+            defs.append(definition)
+        if self.subsenses is not None:
+            for subsense in self.subsenses:
+                defs.extend(subsense.get_definitions())
+        return defs
 
 
 # /entries/ Model 7
